@@ -1,0 +1,29 @@
+# Example: Multi-cluster setup
+#
+# If you want to manage multiple clusters, structure like this:
+#
+# clusters/
+# ├── gke-us-central1/
+# │   ├── flux-system/
+# │   ├── infrastructure.yaml
+# │   └── environments.yaml
+# ├── gke-us-east1/
+# │   ├── flux-system/
+# │   ├── infrastructure.yaml
+# │   └── environments.yaml
+# └── gke-europe-west1/
+#     ├── flux-system/
+#     ├── infrastructure.yaml
+#     └── environments.yaml
+#
+# Then bootstrap each cluster:
+# flux bootstrap github \
+#   --owner=$GITHUB_USER \
+#   --repository=helm-cd \
+#   --branch=main \
+#   --path=./clusters/gke-us-central1 \
+#   --personal
+
+# You can share infrastructure and environments across clusters
+# by referencing the same paths, or customize per-cluster by
+# creating cluster-specific overlays

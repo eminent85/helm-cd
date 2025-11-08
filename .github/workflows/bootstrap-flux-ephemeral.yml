@@ -1,0 +1,239 @@
+name: Bootstrap FluxCD on Ephemeral Cluster
+
+on:
+  workflow_call:
+    inputs:
+      cluster_name:
+        description: 'Name of the GKE cluster'
+        required: true
+        type: string
+      cluster_location:
+        description: 'Location of the GKE cluster'
+        required: true
+        type: string
+      gcp_project_id:
+        description: 'GCP Project ID'
+        required: true
+        type: string
+      flux_path:
+        description: 'Path in the repo where FluxCD configs are stored'
+        required: false
+        type: string
+        default: './clusters/ephemeral'
+      flux_branch:
+        description: 'Git branch to use for FluxCD'
+        required: false
+        type: string
+        default: 'main'
+      app_namespace:
+        description: 'Kubernetes namespace for the application'
+        required: false
+        type: string
+        default: 'ephemeral'
+    secrets:
+      GCP_SA_KEY:
+        description: 'GCP Service Account Key for authentication'
+        required: true
+      FLUX_GITHUB_TOKEN:
+        description: 'GitHub token for FluxCD to access the repository'
+        required: true
+    outputs:
+      flux_version:
+        description: 'Version of FluxCD installed'
+        value: ${{ jobs.bootstrap-flux.outputs.flux_version }}
+      ingress_ip:
+        description: 'Istio ingress gateway IP address'
+        value: ${{ jobs.bootstrap-flux.outputs.ingress_ip }}
+
+jobs:
+  bootstrap-flux:
+    name: Bootstrap FluxCD and Deploy App
+    runs-on: ubuntu-latest
+
+    outputs:
+      flux_version: ${{ steps.flux-check.outputs.version }}
+      ingress_ip: ${{ steps.get-ingress.outputs.ip }}
+
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout helm-cd repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}
+          token: ${{ secrets.FLUX_GITHUB_TOKEN }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ inputs.gcp_project_id }}
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Get GKE Credentials
+        run: |
+          gcloud container clusters get-credentials ${{ inputs.cluster_name }} \
+            --region ${{ inputs.cluster_location }} \
+            --project ${{ inputs.gcp_project_id }}
+
+      - name: Verify Cluster Connectivity
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+          echo "✓ Connected to cluster: ${{ inputs.cluster_name }}"
+
+      - name: Install FluxCD CLI
+        run: |
+          curl -s https://fluxcd.io/install.sh | sudo bash
+          flux --version
+
+      - name: Check FluxCD Prerequisites
+        run: |
+          flux check --pre
+          echo "✓ Cluster meets FluxCD prerequisites"
+
+      - name: Bootstrap FluxCD
+        env:
+          GITHUB_TOKEN: ${{ secrets.FLUX_GITHUB_TOKEN }}
+        run: |
+          # Extract owner and repo from github.repository
+          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
+          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
+
+          echo "Bootstrapping FluxCD..."
+          echo "Repository: ${OWNER}/${REPO}"
+          echo "Branch: ${{ inputs.flux_branch }}"
+          echo "Path: ${{ inputs.flux_path }}"
+
+          flux bootstrap github \
+            --owner=${OWNER} \
+            --repository=${REPO} \
+            --branch=${{ inputs.flux_branch }} \
+            --path=${{ inputs.flux_path }} \
+            --personal \
+            --private=false
+
+      - name: Wait for FluxCD to be Ready
+        run: |
+          echo "Waiting for FluxCD components to be ready..."
+          kubectl wait --for=condition=ready pod \
+            --selector=app.kubernetes.io/part-of=flux \
+            --namespace=flux-system \
+            --timeout=300s
+
+          echo "✓ FluxCD components are ready"
+
+      - name: Verify FluxCD Installation
+        id: flux-check
+        run: |
+          flux check
+          FLUX_VERSION=$(flux --version | awk '{print $3}')
+          echo "version=${FLUX_VERSION}" >> $GITHUB_OUTPUT
+          echo "✓ FluxCD version: ${FLUX_VERSION}"
+
+      - name: Wait for Infrastructure Reconciliation
+        run: |
+          echo "Waiting for infrastructure kustomization to reconcile..."
+          kubectl wait kustomization infrastructure \
+            --for=condition=ready \
+            --namespace=flux-system \
+            --timeout=600s || true
+
+          echo "Infrastructure kustomization status:"
+          flux get kustomizations infrastructure
+
+      - name: Wait for Istio to be Ready
+        run: |
+          echo "Waiting for Istio components..."
+          kubectl wait --for=condition=ready pod \
+            --selector=app=istiod \
+            --namespace=istio-system \
+            --timeout=600s || true
+
+          kubectl wait --for=condition=ready pod \
+            --selector=app=istio-ingressgateway \
+            --namespace=istio-system \
+            --timeout=300s || true
+
+          echo "✓ Istio is ready"
+
+      - name: Wait for Environments Reconciliation
+        run: |
+          echo "Waiting for environments kustomization to reconcile..."
+          kubectl wait kustomization environments \
+            --for=condition=ready \
+            --namespace=flux-system \
+            --timeout=600s || true
+
+          echo "Environments kustomization status:"
+          flux get kustomizations environments
+
+      - name: Wait for Application Deployment
+        run: |
+          echo "Waiting for application pods..."
+          kubectl wait --for=condition=ready pod \
+            --selector=app.kubernetes.io/name=nginx \
+            --namespace=${{ inputs.app_namespace }} \
+            --timeout=300s || true
+
+          echo "Application pods:"
+          kubectl get pods -n ${{ inputs.app_namespace }}
+
+      - name: Get Istio Ingress Gateway IP
+        id: get-ingress
+        run: |
+          echo "Waiting for Istio ingress gateway to get external IP..."
+          for i in {1..60}; do
+            INGRESS_IP=$(kubectl get svc istio-ingressgateway \
+              -n istio-system \
+              -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+
+            if [ -n "$INGRESS_IP" ]; then
+              echo "ip=${INGRESS_IP}" >> $GITHUB_OUTPUT
+              echo "✓ Ingress Gateway IP: ${INGRESS_IP}"
+              break
+            fi
+
+            echo "Waiting for external IP... (attempt $i/60)"
+            sleep 5
+          done
+
+          if [ -z "$INGRESS_IP" ]; then
+            echo "⚠ Warning: Ingress gateway IP not assigned yet"
+            echo "ip=pending" >> $GITHUB_OUTPUT
+          fi
+
+      - name: FluxCD Status Summary
+        run: |
+          echo "### FluxCD Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          flux get all >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Application Status" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods,svc -n ${{ inputs.app_namespace }} >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Bootstrap Summary
+        run: |
+          echo "### FluxCD Bootstrapped Successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Configuration:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository: \`${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: \`${{ inputs.flux_branch }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Path: \`${{ inputs.flux_path }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Namespace: \`${{ inputs.app_namespace }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Cluster: \`${{ inputs.cluster_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Ingress Gateway:**" >> $GITHUB_STEP_SUMMARY
+          echo "- IP: \`${{ steps.get-ingress.outputs.ip }}\`" >> $GITHUB_STEP_SUMMARY

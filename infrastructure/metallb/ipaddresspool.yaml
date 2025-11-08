@@ -1,0 +1,22 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+spec:
+  # IMPORTANT: Replace this IP range with your actual LAN IP range
+  # Example ranges:
+  # - 192.168.1.100-192.168.1.110
+  # - 10.0.0.100-10.0.0.110
+  # - 172.16.0.100-172.16.0.110
+  addresses:
+    - 192.168.1.100-192.168.1.110
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - default-pool

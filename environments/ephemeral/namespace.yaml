@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ephemeral
+  labels:
+    istio-injection: enabled
+    environment: ephemeral
+    managed-by: flux

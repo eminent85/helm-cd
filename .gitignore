@@ -1,0 +1,36 @@
+# Flux SOPS secrets (if using SOPS for secret management)
+*.dec.yaml
+*.dec.yml
+
+# Kubernetes secrets that should not be committed
+*-secret.yaml
+*-secrets.yaml
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Terraform state files (if you're using Terraform for GKE)
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Helm chart dependencies
+charts/
+*.tgz
+
+# Local testing
+kubeconfig
+*.kubeconfig

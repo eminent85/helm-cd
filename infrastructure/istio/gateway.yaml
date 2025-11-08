@@ -1,0 +1,52 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: istio-ingressgateway
+  namespace: flux-system
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: gateway
+      version: '1.24.x'
+      sourceRef:
+        kind: HelmRepository
+        name: istio
+        namespace: flux-system
+      interval: 12h
+  targetNamespace: istio-system
+  dependsOn:
+    - name: istiod
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    service:
+      type: LoadBalancer
+      annotations:
+        cloud.google.com/load-balancer-type: "External"
+      ports:
+        - name: status-port
+          port: 15021
+          targetPort: 15021
+        - name: http2
+          port: 80
+          targetPort: 80
+        - name: https
+          port: 443
+          targetPort: 443
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 2000m
+        memory: 1024Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 80

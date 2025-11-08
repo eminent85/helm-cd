@@ -1,0 +1,91 @@
+# Example: Automatic image updates with Flux
+#
+# 1. Add to infrastructure/sources/kustomization.yaml a new ImageRepository and ImagePolicy
+#
+# 2. Create ImageRepository to track your container registry:
+
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: example-app
+  namespace: flux-system
+spec:
+  image: gcr.io/my-project/example-app
+  interval: 1m0s
+
+---
+# 3. Create ImagePolicy to define version selection strategy:
+
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImagePolicy
+metadata:
+  name: example-app
+  namespace: flux-system
+spec:
+  imageRepositoryRef:
+    name: example-app
+  policy:
+    semver:
+      range: 1.x.x
+
+---
+# 4. Update your HelmRelease to use the policy:
+
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: example-app
+  namespace: flux-system
+  annotations:
+    fluxcd.io/automated: "true"
+spec:
+  values:
+    image:
+      repository: gcr.io/my-project/example-app
+      tag: 1.2.3 # {"$imagepolicy": "flux-system:example-app:tag"}
+
+---
+# 5. Create ImageUpdateAutomation to commit changes:
+
+apiVersion: image.toolkit.fluxcd.io/v1beta1
+kind: ImageUpdateAutomation
+metadata:
+  name: flux-system
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  git:
+    checkout:
+      ref:
+        branch: main
+    commit:
+      author:
+        email: fluxcdbot@users.noreply.github.com
+        name: fluxcdbot
+      messageTemplate: |
+        Automated image update
+
+        Automation name: {{ .AutomationObject }}
+
+        Files:
+        {{ range $filename, $_ := .Updated.Files -}}
+        - {{ $filename }}
+        {{ end -}}
+
+        Objects:
+        {{ range $resource, $_ := .Updated.Objects -}}
+        - {{ $resource.Kind }} {{ $resource.Name }}
+        {{ end -}}
+
+        Images:
+        {{ range .Updated.Images -}}
+        - {{.}}
+        {{ end -}}
+    push:
+      branch: main
+  update:
+    path: ./environments
+    strategy: Setters
