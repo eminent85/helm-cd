@@ -7,8 +7,8 @@ on:
         description: 'Name of the GKE cluster'
         required: true
         type: string
-      cluster_location:
-        description: 'Location of the GKE cluster'
+      cluster_zone:
+        description: 'zone of the GKE cluster'
         required: true
         type: string
       gcp_project_id:
@@ -19,7 +19,7 @@ on:
         description: 'Path in the repo where FluxCD configs are stored'
         required: false
         type: string
-        default: './clusters/ephemeral'
+        default: 'clusters/ephemeral'
       flux_branch:
         description: 'Git branch to use for FluxCD'
         required: false
@@ -31,10 +31,10 @@ on:
         type: string
         default: 'ephemeral'
     secrets:
-      GCP_SA_KEY:
+      gcp_sa_key:
         description: 'GCP Service Account Key for authentication'
         required: true
-      FLUX_GITHUB_TOKEN:
+      flux_github_token:
         description: 'GitHub token for FluxCD to access the repository'
         required: true
     outputs:
@@ -62,13 +62,12 @@ jobs:
       - name: Checkout helm-cd repo
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository }}
-          token: ${{ secrets.FLUX_GITHUB_TOKEN }}
+          repository: eminent85/helm-cd
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.gcp_sa_key }}
 
       - name: Setup Google Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -82,7 +81,7 @@ jobs:
       - name: Get GKE Credentials
         run: |
           gcloud container clusters get-credentials ${{ inputs.cluster_name }} \
-            --region ${{ inputs.cluster_location }} \
+            --zone ${{ inputs.cluster_zone }} \
             --project ${{ inputs.gcp_project_id }}
 
       - name: Verify Cluster Connectivity
@@ -103,7 +102,7 @@ jobs:
 
       - name: Bootstrap FluxCD
         env:
-          GITHUB_TOKEN: ${{ secrets.FLUX_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.flux_github_token }}
         run: |
           # Extract owner and repo from github.repository
           OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
