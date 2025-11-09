@@ -44,6 +44,50 @@ on:
       ingress_ip:
         description: 'Istio ingress gateway IP address'
         value: ${{ jobs.bootstrap-flux.outputs.ingress_ip }}
+  workflow_dispatch:
+    inputs:
+      cluster_name:
+        description: 'Name of the GKE cluster'
+        required: true
+        type: string
+      cluster_zone:
+        description: 'zone of the GKE cluster'
+        required: true
+        type: string
+      gcp_project_id:
+        description: 'GCP Project ID'
+        required: true
+        type: string
+      flux_path:
+        description: 'Path in the repo where FluxCD configs are stored'
+        required: false
+        type: string
+        default: 'clusters/ephemeral'
+      flux_branch:
+        description: 'Git branch to use for FluxCD'
+        required: false
+        type: string
+        default: 'main'
+      app_namespace:
+        description: 'Kubernetes namespace for the application'
+        required: false
+        type: string
+        default: 'ephemeral'
+    secrets:
+      gcp_sa_key:
+        description: 'GCP Service Account Key for authentication'
+        required: true
+      flux_github_token:
+        description: 'GitHub token for FluxCD to access the repository'
+        required: true
+    outputs:
+      flux_version:
+        description: 'Version of FluxCD installed'
+        value: ${{ jobs.bootstrap-flux.outputs.flux_version }}
+      ingress_ip:
+        description: 'Istio ingress gateway IP address's
+        value: ${{ jobs.bootstrap-flux.outputs.ingress_ip }}
+
 
 jobs:
   bootstrap-flux:
