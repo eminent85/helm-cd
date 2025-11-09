@@ -104,18 +104,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.flux_github_token }}
         run: |
-          # Extract owner and repo from github.repository
-          OWNER=$(echo "${{ github.repository }}" | cut -d'/' -f1)
-          REPO=$(echo "${{ github.repository }}" | cut -d'/' -f2)
-
           echo "Bootstrapping FluxCD..."
-          echo "Repository: ${OWNER}/${REPO}"
+          echo "Repository: eminent85/helm-cd"
           echo "Branch: ${{ inputs.flux_branch }}"
           echo "Path: ${{ inputs.flux_path }}"
 
           flux bootstrap github \
-            --owner=${OWNER} \
-            --repository=${REPO} \
+            --owner=eminent85 \
+            --repository=helm-cd \
             --branch=${{ inputs.flux_branch }} \
             --path=${{ inputs.flux_path }} \
             --personal \
