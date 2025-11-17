@@ -14,9 +14,9 @@ spec:
             prefix: /
       route:
         - destination:
-            host: example-app-nginx.dev.svc.cluster.local
+            host: example-app.dev.svc.cluster.local
             port:
-              number: 8080
+              number: 80
           weight: 100
       timeout: 30s
       retries:
