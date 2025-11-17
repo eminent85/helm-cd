@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - sources
   - sealed-secrets
+  - external-secrets
+  - external-secrets-config
   - cert-manager
   - cert-manager-config
   - istio
