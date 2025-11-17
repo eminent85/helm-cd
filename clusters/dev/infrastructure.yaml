@@ -85,6 +85,7 @@ metadata:
 spec:
   dependsOn:
     - name: infrastructure-sources
+    - name: infrastructure-external-secrets
   interval: 10m0s
   sourceRef:
     kind: GitRepository
