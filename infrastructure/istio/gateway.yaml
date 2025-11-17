@@ -23,35 +23,4 @@ spec:
   upgrade:
     remediation:
       retries: 3
-  values:
-    replicaCount: 2
-    service:
-      type: LoadBalancer
-      annotations:
-        cloud.google.com/load-balancer-type: "External"
-      ports:
-        - name: status-port
-          port: 15021
-          protocol: TCP
-          targetPort: 15021
-        - name: http2
-          port: 80
-          protocol: TCP
-          targetPort: 80
-        - name: https
-          port: 443
-          protocol: TCP
-          targetPort: 443
-    resources:
-      requests:
-        cpu: 100m
-        memory: 128Mi
-      limits:
-        cpu: 2000m
-        memory: 1024Mi
-    autoscaling:
-      enabled: true
-      minReplicas: 1
-      maxReplicas: 5
-      targetCPUUtilizationPercentage: 80
 
