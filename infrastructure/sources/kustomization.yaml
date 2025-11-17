@@ -5,4 +5,4 @@ resources:
   - istio.yaml
   - jetstack.yaml
   - metallb.yaml
-  - sealed-secrets.yaml
+  - cloudflare-sealedsecret.yaml
