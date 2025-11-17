@@ -5,7 +5,7 @@ metadata:
   namespace: dev
 spec:
   hosts:
-    - "dev.example.com"
+    - "dev-k8s.phazon.app"
   gateways:
     - example-app-gateway
   http:
