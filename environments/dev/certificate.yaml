@@ -12,6 +12,6 @@ spec:
     kind: ClusterIssuer
   # Domain names for the certificate
   dnsNames:
-    - dev.example.com
+    - dev-k8s.phazon.app
   # Renew certificate 30 days before expiry
   renewBefore: 720h # 30 days
