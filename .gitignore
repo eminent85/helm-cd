@@ -34,3 +34,5 @@ charts/
 # Local testing
 kubeconfig
 *.kubeconfig
+
+.claude
