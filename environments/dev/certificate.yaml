@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: example-app-tls
+  namespace: istio-system
+spec:
+  # Secret name where the certificate will be stored
+  secretName: example-app-tls-cert
+  # Use staging issuer for testing, switch to letsencrypt-prod when ready
+  issuerRef:
+    name: letsencrypt-staging
+    kind: ClusterIssuer
+  # Domain names for the certificate
+  dnsNames:
+    - dev.example.com
+  # Renew certificate 30 days before expiry
+  renewBefore: 720h # 30 days

@@ -3,4 +3,5 @@ kind: Kustomization
 resources:
   - bitnami.yaml
   - istio.yaml
+  - jetstack.yaml
   - metallb.yaml
