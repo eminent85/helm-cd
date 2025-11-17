@@ -3,5 +3,3 @@ kind: Kustomization
 resources:
   - namespace.yaml
   - release.yaml
-  - letsencrypt-staging.yaml
-  - letsencrypt-prod.yaml
