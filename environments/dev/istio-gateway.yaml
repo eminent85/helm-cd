@@ -15,8 +15,6 @@ spec:
         protocol: HTTP
       hosts:
         - "dev-k8s.phazon.app"
-      tls:
-        httpsRedirect: true
     - port:
         number: 443
         name: https

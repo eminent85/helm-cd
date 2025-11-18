@@ -9,6 +9,7 @@ spec:
   gateways:
     - example-app-gateway
   http:
+    # Route application traffic to HTTPS
     - match:
         - uri:
             prefix: /
