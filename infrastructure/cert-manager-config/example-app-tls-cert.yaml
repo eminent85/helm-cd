@@ -8,7 +8,7 @@ spec:
   secretName: example-app-tls-cert
   # Use staging issuer for testing, switch to letsencrypt-prod when ready
   issuerRef:
-    name: letsencrypt-staging
+    name: letsencrypt-prod
     kind: ClusterIssuer
   # Domain names for the certificate
   dnsNames:
