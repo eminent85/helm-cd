@@ -4,6 +4,7 @@ resources:
   - sources
   - external-secrets
   - external-secrets-config
+  - flux-system-config
   - cert-manager
   - cert-manager-config
   - istio

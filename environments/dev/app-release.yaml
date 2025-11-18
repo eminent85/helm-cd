@@ -7,9 +7,10 @@ spec:
   interval: 5m
   chart:
     spec:
-      chart: ./helm/go-app
+      chart: go-app
+      version: latest
       sourceRef:
-        kind: GitRepository
+        kind: HelmRepository
         name: go-app
         namespace: flux-system
       interval: 5m
