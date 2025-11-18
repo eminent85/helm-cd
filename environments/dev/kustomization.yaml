@@ -4,6 +4,5 @@ namespace: dev
 resources:
   - namespace.yaml
   - app-release.yaml
-  - certificate.yaml
   - istio-gateway.yaml
   - istio-virtualservice.yaml
