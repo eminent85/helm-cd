@@ -9,6 +9,15 @@ spec:
   gateways:
     - example-app-gateway
   http:
+    # Route ACME challenge requests to cert-manager solver
+    - match:
+        - uri:
+            prefix: /.well-known/acme-challenge/
+      route:
+        - destination:
+            host: cm-acme-http-solver-7zgcq.dev.svc.cluster.local
+            port:
+              number: 8089
     # Route application traffic to HTTPS
     - match:
         - uri:
