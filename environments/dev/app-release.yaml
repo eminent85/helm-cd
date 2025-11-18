@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: go-app
-      version: latest
+      version: '*'
       sourceRef:
         kind: HelmRepository
         name: go-app
