@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: dev
 resources:
   - namespace.yaml
+  - gcp-service-account-externalsecret.yaml
   - app-release.yaml
   - istio-gateway.yaml
   - istio-virtualservice.yaml

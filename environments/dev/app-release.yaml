@@ -27,9 +27,12 @@ spec:
     replicaCount: 2
 
     image:
-      repository: eminent85/go-app
+      repository: us-west1-docker.pkg.dev/ascent-wow-bot/eminent-container-image/go-app
       tag: latest
       pullPolicy: IfNotPresent
+
+    imagePullSecrets:
+      - name: gcp-service-account
 
     service:
       type: ClusterIP
