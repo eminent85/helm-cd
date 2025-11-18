@@ -4,4 +4,4 @@ resources:
   - cloudflare-externalsecret.yaml
   - letsencrypt-staging.yaml
   - letsencrypt-prod.yaml
-  - example-app-tls-cert.yaml
+  - go-app-tls-cert.yaml

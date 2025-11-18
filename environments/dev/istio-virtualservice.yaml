@@ -1,13 +1,13 @@
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
-  name: example-app
+  name: go-app
   namespace: dev
 spec:
   hosts:
     - "dev-k8s.phazon.app"
   gateways:
-    - example-app-gateway
+    - go-app-gateway
   http:
     # Route application traffic
     - match:
@@ -15,7 +15,7 @@ spec:
             prefix: /
       route:
         - destination:
-            host: example-app-nginx.dev.svc.cluster.local
+            host: go-app.dev.svc.cluster.local
             port:
               number: 80
           weight: 100

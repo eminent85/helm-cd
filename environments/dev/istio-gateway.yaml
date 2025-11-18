@@ -1,7 +1,7 @@
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: example-app-gateway
+  name: go-app-gateway
   namespace: dev
   annotations:
     external-dns.alpha.kubernetes.io/hostname: dev-k8s.phazon.app
@@ -21,6 +21,6 @@ spec:
         protocol: HTTPS
       tls:
         mode: SIMPLE
-        credentialName: example-app-tls-cert # References Secret in dev namespace
+        credentialName: go-app-tls-cert
       hosts:
         - "dev-k8s.phazon.app"
