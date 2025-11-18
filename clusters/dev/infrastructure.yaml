@@ -85,7 +85,7 @@ metadata:
 spec:
   dependsOn:
     - name: infrastructure-sources
-    - name: infrastructure-external-secrets
+    - name: infrastructure-external-dns-config
   interval: 10m0s
   sourceRef:
     kind: GitRepository
@@ -101,7 +101,6 @@ metadata:
   namespace: flux-system
 spec:
   dependsOn:
-    - name: infrastructure-external-dns
     - name: infrastructure-external-secrets
   interval: 10m0s
   sourceRef:
