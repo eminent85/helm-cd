@@ -11,8 +11,13 @@ spec:
     # Private key secret reference
     privateKeySecretRef:
       name: letsencrypt-staging
-    # Enable HTTP-01 challenge provider
+    # Enable DNS-01 challenge provider with Cloudflare
     solvers:
-    - http01:
-        ingress:
-          class: istio
+    - dns01:
+        cloudflare:
+          apiTokenSecretRef:
+            name: cloudflare-api-token
+            key: api-token
+      selector:
+        dnsZones:
+          - phazon.app
