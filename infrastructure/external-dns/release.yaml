@@ -8,28 +8,55 @@ spec:
   chart:
     spec:
       chart: external-dns
-      version: 9.0.3
+      version: 1.19.0
       sourceRef:
         kind: HelmRepository
-        name: bitnami
+        name: kubernetes-sigs
         namespace: flux-system
   values:
+    # Use the latest stable external-dns version
     image:
-      tag: 0.18.0-debian-12-r3
-    provider: cloudflare
+      registry: registry.k8s.io
+      repository: external-dns/external-dns
+      tag: v0.19.0
+
+    # Cloudflare provider configuration
+    provider:
+      name: cloudflare
+
     env:
       - name: CF_API_TOKEN
         valueFrom:
           secretKeyRef:
             name: cloudflare-api-token
             key: cloudflare_api_token
-    cloudflare:
-      proxied: true  # Enable Cloudflare proxy (orange cloud)
+
+    # Cloudflare-specific settings
+    extraArgs:
+      - --cloudflare-proxied  # Enable Cloudflare proxy (orange cloud)
+
+    # Domain filtering
     domainFilters:
       - phazon.app
-    policy: sync  # Automatically sync DNS records
+
+    # Sync policy: upsert-only (safer) or sync (full control)
+    policy: sync
+
+    # Sources to watch for DNS records
     sources:
+      - service
       - ingress
       - istio-gateway
+      - istio-virtualservice
+
+    # Ownership settings
     txtOwnerId: gke-external-dns
     txtPrefix: "externaldns-"
+
+    # Use existing RBAC
+    serviceAccount:
+      create: false
+      name: external-dns
+
+    rbac:
+      create: false
