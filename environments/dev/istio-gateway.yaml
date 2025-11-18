@@ -21,6 +21,6 @@ spec:
         protocol: HTTPS
       tls:
         mode: SIMPLE
-        credentialName: example-app-tls-cert # References a Secret in istio-system namespace
+        credentialName: dev/example-app-tls-cert # References Secret in dev namespace
       hosts:
         - "dev-k8s.phazon.app"
