@@ -18,11 +18,13 @@ spec:
     image:
       repository: registry.k8s.io/external-dns/external-dns
       tag: v0.19.0
+      pullPolicy: IfNotPresent
 
     # Cloudflare provider configuration
     provider:
       name: cloudflare
 
+    # Environment variables for Cloudflare authentication
     env:
       - name: CF_API_TOKEN
         valueFrom:
@@ -32,7 +34,7 @@ spec:
 
     # Cloudflare-specific settings
     extraArgs:
-      - --cloudflare-proxied  # Enable Cloudflare proxy (orange cloud)
+      - --cloudflare-proxied
 
     # Domain filtering
     domainFilters:
@@ -50,7 +52,7 @@ spec:
 
     # Ownership settings
     txtOwnerId: gke-external-dns
-    txtPrefix: "externaldns-"
+    txtPrefix: externaldns-
 
     # Use existing RBAC
     serviceAccount:
