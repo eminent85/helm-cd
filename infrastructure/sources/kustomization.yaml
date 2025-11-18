@@ -4,5 +4,6 @@ resources:
   - bitnami.yaml
   - istio.yaml
   - jetstack.yaml
+  - kubernetes-sigs.yaml
   - metallb.yaml
   - externalsecrets.yaml
