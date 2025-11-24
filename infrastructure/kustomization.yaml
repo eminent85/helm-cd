@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
   - sources
   - external-secrets
-  - external-secrets-config
+  - cluster-external-secretstore
   - flux-system-config
   - cert-manager
   - cert-manager-config

@@ -31,8 +31,9 @@ spec:
       tag: latest
       pullPolicy: IfNotPresent
 
-    imagePullSecrets:
-      - name: gcp-service-account
+    serviceAccount:
+      create: false
+      name: go-app
 
     service:
       type: ClusterIP

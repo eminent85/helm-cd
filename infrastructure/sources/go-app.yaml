@@ -7,5 +7,4 @@ spec:
   interval: 5m
   type: oci
   url: oci://us-west1-docker.pkg.dev/ascent-wow-bot/eminent-container-image/charts
-  secretRef:
-    name: gcp-service-account
+  provider: gcp
